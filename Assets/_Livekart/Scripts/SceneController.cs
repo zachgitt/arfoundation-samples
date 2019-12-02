@@ -14,24 +14,45 @@ public class SceneController : MonoBehaviour
 	private ARPlaneManager arPlaneManager;
 	private PlaceMultipleObjectsOnPlane planeScript;
 
+	// Setup UI
 	public GameObject setupPanel;
-	public GameObject coins;
-	public GameObject powerUps;
-	public GameObject setup;
+	public GameObject setupText;
+	public GameObject setupCoins;
+	public GameObject setupPowerUps;
+	public GameObject instructionPanel;
+	public GameObject instructionText;
 
+	// Gameplay UI
+	private int totalCoins;
+	private float clock;
+	private int countdown;
+	public GameObject playPanel;
+	public GameObject playCoins;
+	public GameObject timer;
+	public GameObject countdownText;
+
+	// Determines state of the game
 	public enum State {Setup1, Setup2, Setup3, Play, GameOver};
 	public State currState;
 
     // Start is called before the first frame update
     void Start()
     {
+
+    	// Activate correct panels
+    	setupPanel.SetActive(true);
+    	instructionPanel.SetActive(true);
+    	playPanel.SetActive(false);
+    	countdownText.SetActive(false);
+
         startTime = Time.time;
         arPlaneManager = ARSessionOrigin.GetComponent<ARPlaneManager>();
         planeScript = ARSessionOrigin.GetComponent<PlaceMultipleObjectsOnPlane>();
-        setup.GetComponent<Text>().text = "Setup: 0/3";
+        setupText.GetComponent<Text>().text = "Setup: 0/3";
+        countdownText.GetComponent<Text>().text = "10";
         currState = State.Setup1;
 
-        // Play Gifs
+        // Gifs
         float duration1 = 6, delay1 = 3;
         float duration2 = 3, delay2 = 12;
         StartCoroutine(PlayGif("plane", duration1, delay1));
@@ -56,17 +77,22 @@ public class SceneController : MonoBehaviour
     	switch (currState) {
     		case State.Setup1:
     		    UpdateSetup(1);
-    			UpdateCoins();
+    			UpdateCoinSetup();
+    			UpdateInstructions("Place Coins", Color.red);
     			break;
 
     		case State.Setup2:
-    			UpdatePowerUps();
+    			UpdatePowerUpSetup();
+    			UpdateInstructions("Place PowerUps", Color.yellow);
     			break;
 
     		case State.Setup3:
+    			UpdateInstructions("Place Phone\nOn RC Car", Color.green);
     			break;
 
     		case State.Play:
+    			UpdateCoinPlay();
+    			UpdateTimer();
     			break;
 
     		case State.GameOver:
@@ -81,19 +107,49 @@ public class SceneController : MonoBehaviour
     void UpdateSetup(int state) {
     	if (state == -1) {
     		setupPanel.SetActive(false);
+    		instructionPanel.SetActive(false);
     	}
-    	setup.GetComponent<Text>().text = "Setup: " + state.ToString() + "/3";
+    	setupText.GetComponent<Text>().text = "Setup: " + state.ToString() + "/3";
     }
 
-    void UpdateCoins() {
-    	coins.GetComponent<Text>().text = "Coins: " + planeScript.Coins.Count.ToString();
-    }
-
-    void UpdatePowerUps() {
-    	powerUps.GetComponent<Text>().text = "PowerUps: " + planeScript.PowerUps.Count.ToString();
+    void UpdateCoinSetup() {
+    	setupCoins.GetComponent<Text>().text = "Coins: " + planeScript.Coins.Count.ToString();
+    	totalCoins = planeScript.Coins.Count;
     }
 
 
+    void UpdatePowerUpSetup() {
+    	setupPowerUps.GetComponent<Text>().text = "PowerUps: " + planeScript.PowerUps.Count.ToString();
+    }
+
+
+    void UpdateInstructions(string msg, Color color) {
+    	instructionText.GetComponent<Text>().text = msg;
+    	instructionText.GetComponent<Text>().color = color;
+    }
+
+    void UpdateCoinPlay() {
+    	playCoins.GetComponent<Text>().text = "Coins: " + (totalCoins - planeScript.Coins.Count).ToString() + "/" + totalCoins.ToString();
+    }
+
+    void UpdateTimer() {
+    	if (countdown == 0) {
+            clock += Time.deltaTime;
+            int seconds = Mathf.RoundToInt(clock);
+            timer.GetComponent<Text>().text = "Time: " + seconds.ToString() + "s";
+        }
+    }
+
+    IEnumerator Countdown() {
+    	countdown = 10;
+    	while (countdown > 0) {
+    		countdown--;
+    		countdownText.GetComponent<Text>().text = countdown.ToString();
+    		yield return new WaitForSeconds(1.0f);
+    	}
+
+    	countdownText.SetActive(false);
+    }
 
     // Plane Gif
     IEnumerator PlayGif(string gifName, float duration, float delay) {
@@ -167,6 +223,9 @@ public class SceneController : MonoBehaviour
     		case State.Setup3:
     		    currState++;
     			UpdateSetup(-1);
+    			playPanel.SetActive(true);
+    			countdownText.SetActive(true);
+    			StartCoroutine(Countdown());
     			break;
 
     		case State.Play:
