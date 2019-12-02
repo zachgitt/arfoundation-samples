@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class SceneController : MonoBehaviour
 {
@@ -12,70 +14,175 @@ public class SceneController : MonoBehaviour
 	private ARPlaneManager arPlaneManager;
 	private PlaceMultipleObjectsOnPlane planeScript;
 
+	public GameObject setupPanel;
+	public GameObject coins;
+	public GameObject powerUps;
+	public GameObject setup;
+
+	public enum State {Setup1, Setup2, Setup3, Play, GameOver};
+	public State currState;
+
     // Start is called before the first frame update
     void Start()
     {
         startTime = Time.time;
         arPlaneManager = ARSessionOrigin.GetComponent<ARPlaneManager>();
         planeScript = ARSessionOrigin.GetComponent<PlaceMultipleObjectsOnPlane>();
+        setup.GetComponent<Text>().text = "Setup: 0/3";
+        currState = State.Setup1;
+
+        // Play Gifs
+        float duration1 = 6, delay1 = 3;
+        float duration2 = 3, delay2 = 12;
+        StartCoroutine(PlayGif("plane", duration1, delay1));
+    	StartCoroutine(PlayGif("tap", duration2, delay2));
+    }
+
+    public bool currStateIsSetup1() {
+    	return (currState == State.Setup1);
+    }
+
+    public bool currStateIsSetup2() {
+    	return (currState == State.Setup2);
     }
 
     // Update is called once per frame
     void Update()
     {
-    	StartCoroutine(PlayPlaneGif());
-    	StartCoroutine(PlayTapGif());
+    	if (planeScript.Coins.Count > 0) {
+    		StartCoroutine(StopGifs());
+    	}
+
+    	switch (currState) {
+    		case State.Setup1:
+    		    UpdateSetup(1);
+    			UpdateCoins();
+    			break;
+
+    		case State.Setup2:
+    			UpdatePowerUps();
+    			break;
+
+    		case State.Setup3:
+    			break;
+
+    		case State.Play:
+    			break;
+
+    		case State.GameOver:
+    			break;
+
+    		default:
+    			Debug.Log("STATE NOT FOUND");
+    			break;
+    	}
     }
 
+    void UpdateSetup(int state) {
+    	if (state == -1) {
+    		setupPanel.SetActive(false);
+    	}
+    	setup.GetComponent<Text>().text = "Setup: " + state.ToString() + "/3";
+    }
+
+    void UpdateCoins() {
+    	coins.GetComponent<Text>().text = "Coins: " + planeScript.Coins.Count.ToString();
+    }
+
+    void UpdatePowerUps() {
+    	powerUps.GetComponent<Text>().text = "PowerUps: " + planeScript.PowerUps.Count.ToString();
+    }
+
+
+
     // Plane Gif
-    // Play 3 seconds after start, if no plane detected.
-    IEnumerator PlayPlaneGif() {
-        float delta = Time.time - startTime;
-        float begin = 3;
-        float end = 9;
+    IEnumerator PlayGif(string gifName, float duration, float delay) {
 
         // TODO: && arPlaneManager.planeCount() == 0 does not work
         // List<ARPlane> allPlanes = new List<ARPlane>();
         // arPlaneManager.GetAllPlanes(allPlanes);
 
-        if (begin < delta) {
-        	foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
-        		if (vsource.clip.name.Equals("plane")) {
-        			if (delta < end) {
-        				vsource.Play();
-        			}
-        			else {
-        				vsource.Stop();
-        			}
-        		}
+    	Debug.Log("PLAYING GIF");
 
+    	// Delay
+    	while (delay > 0) {
+    		delay -= Time.deltaTime;
+    		yield return null;
+    	}
+
+
+    	// Play video
+    	while (duration > 0) {
+    		foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
+	        	if (vsource.clip.name.Equals(gifName)) {
+	        		vsource.Play();
+	        	}
         	}
-        }
+        	duration -= Time.deltaTime;
+        	yield return null;
+    	}
 
-        yield return null;
+
+    	// Stop video
+		foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
+        	if (vsource.clip.name.Equals(gifName)) {
+        		vsource.Stop();
+        	}
+    	}
+        
+    	yield return null;
     }
 
-    // Tap Gif
-    // Play 3 seconds after plane detected, if no cubes placed.
-    IEnumerator PlayTapGif() {
-        float delta = Time.time - startTime;
-        float begin = 12;
-        float end = 15;
+    IEnumerator StopGifs() {
+    	foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
+        	vsource.Stop();
+        	yield return null;
+    	}
+    }
 
-        if (begin < delta) {
-        	foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
-        		if (vsource.clip.name.Equals("tap")) {
-        			if (delta < end && planeScript.spawnedObjects.Count == 0) {
-        				vsource.Play();
-        			}
-        			else {
-        				vsource.Stop();
-        			}
-        		}
 
-        	}
-        }
+    public void Continue() {
 
-        yield return null;
+    	StartCoroutine(StopGifs());
+
+    	switch (currState) {
+
+    		case State.Setup1:
+    		    if (planeScript.Coins.Count == 0) {
+    		    	float duration = 3, delay = 0;
+    		    	StartCoroutine(PlayGif("tap", duration, delay));
+    		    }
+    		    else {
+    		    	UpdateSetup(2);
+    		    	currState++;
+    		    }
+
+    			break;
+
+    		case State.Setup2:
+    		    currState++;
+    			UpdateSetup(3);
+    			break;
+
+    		case State.Setup3:
+    		    currState++;
+    			UpdateSetup(-1);
+    			break;
+
+    		case State.Play:
+    			break;
+
+    		case State.GameOver:
+    			break;
+
+    		default:
+    			Debug.Log("STATE NOT FOUND");
+    			break;
+    	}
+
+    }
+
+    public void Restart() {
+    	SceneManager.LoadScene("SetUp");
     }
 }

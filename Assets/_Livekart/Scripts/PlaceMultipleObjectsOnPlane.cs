@@ -9,15 +9,28 @@ public class PlaceMultipleObjectsOnPlane : MonoBehaviour
 {
     [SerializeField]
     [Tooltip("Instantiates this prefab on a plane at the touch location.")]
-    GameObject m_PlacedPrefab;
+    GameObject m_powerUpPlacedPrefab;
 
     /// <summary>
     /// The prefab to instantiate on touch.
     /// </summary>
-    public GameObject placedPrefab
+    public GameObject powerUpPlacedPrefab
     {
-        get { return m_PlacedPrefab; }
-        set { m_PlacedPrefab = value; }
+        get { return m_powerUpPlacedPrefab; }
+        set { m_powerUpPlacedPrefab = value; }
+    }
+
+    [SerializeField]
+    [Tooltip("Instantiates this prefab on a plane at the touch location.")]
+    GameObject m_coinPlacedPrefab;
+
+    /// <summary>
+    /// The prefab to instantiate on touch.
+    /// </summary>
+    public GameObject coinPlacedPrefab
+    {
+        get { return m_coinPlacedPrefab; }
+        set { m_coinPlacedPrefab = value; }
     }
 
     /// <summary>
@@ -25,7 +38,13 @@ public class PlaceMultipleObjectsOnPlane : MonoBehaviour
     /// </summary>
     public GameObject spawnedObject { get; private set; }
 
-    public List<GameObject> spawnedObjects;
+    /*
+    THIS IS OUR SHIT
+    */
+    public List<GameObject> Coins;
+    public List<GameObject> PowerUps;
+    public GameObject sceneController;
+    private SceneController sceneScript;
 
     /// <summary>
     /// Invoked whenever an object is placed in on a plane.
@@ -41,6 +60,10 @@ public class PlaceMultipleObjectsOnPlane : MonoBehaviour
         m_RaycastManager = GetComponent<ARRaycastManager>();
     }
 
+    void Start() {
+         sceneScript = sceneController.GetComponent<SceneController>();
+    }
+
     void Update()
     {
         if (Input.touchCount > 0)
@@ -53,8 +76,16 @@ public class PlaceMultipleObjectsOnPlane : MonoBehaviour
                 {
                     Pose hitPose = s_Hits[0].pose;
 
-                    spawnedObject = Instantiate(m_PlacedPrefab, hitPose.position, hitPose.rotation);
-                    spawnedObjects.Add(spawnedObject);
+                    //spawnedObject = Instantiate(m_powerUpPlacedPrefab, hitPose.position, hitPose.rotation);
+                    
+                    if (sceneScript.currStateIsSetup1()) {
+                        spawnedObject = Instantiate(m_coinPlacedPrefab, hitPose.position, hitPose.rotation);
+                        Coins.Add(spawnedObject);
+                    }
+                    else if (sceneScript.currStateIsSetup2()) {
+                        spawnedObject = Instantiate(m_powerUpPlacedPrefab, hitPose.position, hitPose.rotation);
+                        PowerUps.Add(spawnedObject);
+                    }
 
                     if (onPlacedObject != null)
                     {
