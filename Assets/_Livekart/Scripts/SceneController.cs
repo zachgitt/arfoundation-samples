@@ -18,6 +18,10 @@ public class SceneController : MonoBehaviour
 	public GameObject moveGif;
 	public GameObject tapGif;
 
+	// Pictures
+	public GameObject movePic;
+	public GameObject tapPic;
+
 	// Setup UI
 	public GameObject setupPanel;
 	public GameObject setupText;
@@ -60,10 +64,21 @@ public class SceneController : MonoBehaviour
         // Gifs
         // moveGif.SetActive(false);
         // tapGif.SetActive(false);
-        float duration1 = 6, delay1 = 3;
-        float duration2 = 3, delay2 = 12;
-        StartCoroutine(PlayGif(moveGif, duration1, delay1));
-    	StartCoroutine(PlayGif(tapGif, duration2, delay2));
+        float duration1 = 2, delay1 = 3;
+        float duration2 = 2, delay2 = 8;
+        StartCoroutine(showPic(movePic, duration1, delay1));
+        StartCoroutine(showPic(tapPic, duration2, delay2));
+
+
+        // moveGif.GetComponent<Animator>().Play("MoveLoop");
+        // if (moveGif.GetComponent<Animator>().GetCurrentAnimatorStateInfo(0).IsName("MoveLoop")) {
+        // 	Debug.Log("MOVING");
+        // }
+        // else {
+        // 	Debug.Log("NOT MOVING");
+        // }
+     //    StartCoroutine(PlayGif(moveGif, duration1, delay1));
+    	// StartCoroutine(PlayGif(tapGif, duration2, delay2));
     }
 
     public bool currStateIsSetup1() {
@@ -78,7 +93,7 @@ public class SceneController : MonoBehaviour
     void Update()
     {
     	if (planeScript.Coins.Count > 0) {
-    		StartCoroutine(StopGifs());
+    		StartCoroutine(RemovePics());
     	}
 
     	switch (currState) {
@@ -158,6 +173,25 @@ public class SceneController : MonoBehaviour
     	countdownText.SetActive(false);
     }
 
+    IEnumerator showPic(GameObject pic, float duration, float delay) {
+
+    	// Delay
+    	while (delay > 0) {
+    		delay -= Time.deltaTime;
+    		yield return null;
+    	}
+
+    	// Show pic
+    	pic.SetActive(true);
+    	while (duration > 0) {
+        	duration -= Time.deltaTime;
+        	yield return null;
+    	}
+
+    	// Remove pic
+    	pic.SetActive(false);
+    }
+
     // Plane Gif
     IEnumerator PlayGif(GameObject gif, float duration, float delay) {
 
@@ -215,27 +249,27 @@ public class SceneController : MonoBehaviour
     	yield return null;
     }
 
-    IEnumerator StopGifs() {
+    IEnumerator RemovePics() {
     	// foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
      //    	vsource.Stop();
      //    	yield return null;
     	// }
-    	moveGif.GetComponent<Animator>().enabled = false;
-    	tapGif.GetComponent<Animator>().enabled = false;
+    	movePic.SetActive(false);
+    	tapGif.SetActive(false);
     	yield return null;
     }
 
 
     public void Continue() {
 
-    	StartCoroutine(StopGifs());
+    	StartCoroutine(RemovePics());
 
     	switch (currState) {
 
     		case State.Setup1:
     		    if (planeScript.Coins.Count == 0) {
-    		    	float duration = 3, delay = 0;
-    		    	StartCoroutine(PlayGif(tapGif, duration, delay));
+    		    	float duration = 2, delay = 0;
+    		    	StartCoroutine(showPic(tapPic, duration, delay));
     		    }
     		    else {
     		    	UpdateSetup(2);
