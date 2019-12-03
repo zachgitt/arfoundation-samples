@@ -14,6 +14,10 @@ public class SceneController : MonoBehaviour
 	private ARPlaneManager arPlaneManager;
 	private PlaceMultipleObjectsOnPlane planeScript;
 
+	// Gifs
+	public GameObject moveGif;
+	public GameObject tapGif;
+
 	// Setup UI
 	public GameObject setupPanel;
 	public GameObject setupText;
@@ -38,6 +42,7 @@ public class SceneController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+    	Debug.Log("START");
 
     	// Activate correct panels
     	setupPanel.SetActive(true);
@@ -53,10 +58,12 @@ public class SceneController : MonoBehaviour
         currState = State.Setup1;
 
         // Gifs
+        // moveGif.SetActive(false);
+        // tapGif.SetActive(false);
         float duration1 = 6, delay1 = 3;
         float duration2 = 3, delay2 = 12;
-        StartCoroutine(PlayGif("plane", duration1, delay1));
-    	StartCoroutine(PlayGif("tap", duration2, delay2));
+        StartCoroutine(PlayGif(moveGif, duration1, delay1));
+    	StartCoroutine(PlayGif(tapGif, duration2, delay2));
     }
 
     public bool currStateIsSetup1() {
@@ -152,13 +159,22 @@ public class SceneController : MonoBehaviour
     }
 
     // Plane Gif
-    IEnumerator PlayGif(string gifName, float duration, float delay) {
+    IEnumerator PlayGif(GameObject gif, float duration, float delay) {
 
         // TODO: && arPlaneManager.planeCount() == 0 does not work
         // List<ARPlane> allPlanes = new List<ARPlane>();
         // arPlaneManager.GetAllPlanes(allPlanes);
 
     	Debug.Log("PLAYING GIF");
+
+    	// Determine gameobject
+    	// GameObject gif = null;
+    	// if (gifName == "move") {
+    	// 	gif = moveGif;
+    	// }
+    	// else if (gifName == "tap") {
+    	// 	gif = tapGif;
+    	// }
 
     	// Delay
     	while (delay > 0) {
@@ -167,33 +183,46 @@ public class SceneController : MonoBehaviour
     	}
 
 
-    	// Play video
+    	// Play gif
+    	// string stateName = "";
+    	// if (gif == moveGif) {
+    	// 	stateName = "MoveLoop";
+    	// }
+    	// else if (gif == tapGif) {
+    	// 	stateName = "TapLoop";
+    	// }
+
+    	gif.GetComponent<Animator>().enabled = true;
     	while (duration > 0) {
-    		foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
-	        	if (vsource.clip.name.Equals(gifName)) {
-	        		vsource.Play();
-	        	}
-        	}
+    		// foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
+	     //    	if (vsource.clip.name.Equals(gifName)) {
+	     //    		vsource.Play();
+	     //    	}
+      //   	}
         	duration -= Time.deltaTime;
         	yield return null;
     	}
 
 
     	// Stop video
-		foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
-        	if (vsource.clip.name.Equals(gifName)) {
-        		vsource.Stop();
-        	}
-    	}
-        
+		// foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
+  //       	if (vsource.clip.name.Equals(gifName)) {
+  //       		vsource.Stop();
+  //       	}
+  //   	}
+        gif.GetComponent<Animator>().enabled = false;
+
     	yield return null;
     }
 
     IEnumerator StopGifs() {
-    	foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
-        	vsource.Stop();
-        	yield return null;
-    	}
+    	// foreach (VideoPlayer vsource in ARCamera.GetComponents<VideoPlayer>()) {
+     //    	vsource.Stop();
+     //    	yield return null;
+    	// }
+    	moveGif.GetComponent<Animator>().enabled = false;
+    	tapGif.GetComponent<Animator>().enabled = false;
+    	yield return null;
     }
 
 
@@ -206,7 +235,7 @@ public class SceneController : MonoBehaviour
     		case State.Setup1:
     		    if (planeScript.Coins.Count == 0) {
     		    	float duration = 3, delay = 0;
-    		    	StartCoroutine(PlayGif("tap", duration, delay));
+    		    	StartCoroutine(PlayGif(tapGif, duration, delay));
     		    }
     		    else {
     		    	UpdateSetup(2);

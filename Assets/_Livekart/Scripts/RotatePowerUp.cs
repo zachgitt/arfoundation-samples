@@ -1,31 +1,45 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RotatePowerUp : MonoBehaviour
 {
     public float rotationRate = 9f;
-    private bool rotated = false;
+    private bool rotating;
+    //private int numSpins;
+    //private string faceValue;
 
     // Start is called before the first frame update
     void Start()
     {
-
+        rotating = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!rotated)
+        if (!rotating)
         {
-            StartCoroutine(UpdatePowerUpCube());
+            int numSpins = GetSpins(8, 20);
+            string face = returnFace(numSpins);
+            StartCoroutine(UpdatePowerUpCube(numSpins));
         }
-        
+
+        /*if (doneRotating) {
+            faceValue = returnFace(numSpins % 4);
+        }*/
     }
 
-    IEnumerator UpdatePowerUpCube()
+    // Spin N times
+    int GetSpins(int min, int max) {
+        return Random.Range(min, max);
+    }
+
+    // Update spinner
+    IEnumerator UpdatePowerUpCube(int numSpins)
     {
-        rotated = true;
+        rotating = true;
 
         float startTime = 0.0f;
         float endTime = 1.0f;
@@ -35,8 +49,9 @@ public class RotatePowerUp : MonoBehaviour
         Vector3 sourceAxis;
         initRotation.ToAngleAxis(out sourceAngle, out sourceAxis);
 
-        int numSpins = Random.Range(8, 20);
-        printFace(numSpins % 4);
+        //int numSpins = Random.Range(8, 20);
+        //numSpins = Random.Range(8, 20);
+        //printFace(numSpins % 4);
         float targetAngle = sourceAngle + 90 * numSpins;
 
         while (startTime <= endTime)
@@ -48,26 +63,33 @@ public class RotatePowerUp : MonoBehaviour
 
             yield return null;
         }
+
+        // /returnFace(numSpins % 4);
+        //doneRotating = true;
     }
 
-    void printFace(int faceNum)
+    string returnFace(int numSpins)
     {
+        int faceNum = numSpins % 4;
+
+        string returnVal;
         switch(faceNum) {
             case (0):
-                Debug.Log("Magnet");
+                returnVal = "Magnet";
                 break;
             case (1):
-                Debug.Log("Arrow");
+                returnVal = "Arrow";
                 break;
             case (2):
-                Debug.Log("Ink");
+                returnVal = "Ink";
                 break;
             case (3):
-                Debug.Log("Clock");
+                returnVal = "Clock";
                 break;
             default:
-                Debug.Log("YOU FUCKED UP");
+                returnVal = "YOU FUCKED UP";
                 break;
         }
+        return returnVal;
     }
 }
