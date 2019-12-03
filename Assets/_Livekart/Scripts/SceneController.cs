@@ -39,6 +39,11 @@ public class SceneController : MonoBehaviour
 	public GameObject timer;
 	public GameObject countdownText;
 
+	// Gameover
+	public GameObject gameOverPanel;
+	public GameObject gameOverTime;
+	private int score;
+
 	// Determines state of the game
 	public enum State {Setup1, Setup2, Setup3, Play, GameOver};
 	public State currState;
@@ -53,6 +58,7 @@ public class SceneController : MonoBehaviour
     	instructionPanel.SetActive(true);
     	playPanel.SetActive(false);
     	countdownText.SetActive(false);
+    	gameOverPanel.SetActive(false);
 
         startTime = Time.time;
         arPlaneManager = ARSessionOrigin.GetComponent<ARPlaneManager>();
@@ -115,6 +121,7 @@ public class SceneController : MonoBehaviour
     		case State.Play:
     			UpdateCoinPlay();
     			UpdateTimer();
+    			UpdateFinish();
     			break;
 
     		case State.GameOver:
@@ -123,6 +130,14 @@ public class SceneController : MonoBehaviour
     		default:
     			Debug.Log("STATE NOT FOUND");
     			break;
+    	}
+    }
+
+    void UpdateFinish() {
+    	if (planeScript.Coins.Count == 0) {
+    		playPanel.SetActive(false);
+    		gameOverPanel.SetActive(true);
+    		gameOverTime.GetComponent<Text>().text = "Time: " + score.ToString() + "s";
     	}
     }
 
@@ -159,6 +174,7 @@ public class SceneController : MonoBehaviour
             clock += Time.deltaTime;
             int seconds = Mathf.RoundToInt(clock);
             timer.GetComponent<Text>().text = "Time: " + seconds.ToString() + "s";
+            score = seconds;
         }
     }
 
